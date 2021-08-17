@@ -92,13 +92,8 @@ if __name__ == "__main__":
     y = df_clean["fare_amount"]
     trainer = Trainer(X,y)
     trained_pipe = trainer.run()
-    trainer.evaluate()
+    rsme = trainer.evaluate()
 
-    experiment_id = trainer.mlflow_experiment_id
-
-    client = MlflowClient()
-
-    for model in ["linear", "Randomforest"]:
-        trainer.mlflow_log_metric("rmse", 4.5)
-        trainer.mlflow_log_param("model", model)
-        trainer.mlflow_log_param("student_name", "lillkml")
+    trainer.mlflow_log_metric("rmse", rsme)
+    trainer.mlflow_log_param("model", "linear")
+    trainer.mlflow_log_param("student_name", "lillkml")

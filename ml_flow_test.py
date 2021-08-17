@@ -17,7 +17,7 @@ except BaseException:
 yourname = "lillykml"
 
 if yourname is None:
-    print("lillykml")
+    print("please define your name, il will be used as a parameter to log")
 
 for model in ["linear", "Randomforest"]:
     run = client.create_run(experiment_id)
