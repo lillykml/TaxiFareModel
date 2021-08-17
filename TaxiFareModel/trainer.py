@@ -6,6 +6,9 @@ from sklearn.linear_model import LinearRegression
 from TaxiFareModel.encoders import TimeFeaturesEncoder, DistanceTransformer
 from TaxiFareModel.data import get_data, clean_data, holdout
 from TaxiFareModel.utils import compute_rmse
+from memoized_property import memoized_property
+import mlflow
+from mlflow.tracking import MlflowClient
 
 
 class Trainer():
@@ -53,6 +56,35 @@ class Trainer():
         return compute_rmse(self.y_pred, self.y_test)
 
 
+    MLFLOW_URI = "https://mlflow.lewagon.co/"
+    EXPERIMENT_NAME = "[GER] [Munich] [lillykml] TaxiFareChallenge v1"
+
+    @memoized_property
+    def mlflow_client(self):
+        self.mlflow_uri = "https://mlflow.lewagon.co/"
+        mlflow.set_tracking_uri(self.mlflow_uri)
+        return MlflowClient()
+
+    @memoized_property
+    def mlflow_experiment_id(self):
+        self.experiment_name = "[GER] [Munich] [lillykml] TaxiFareChallenge v1"
+        try:
+            return self.mlflow_client.create_experiment(self.experiment_name)
+        except BaseException:
+            return self.mlflow_client.get_experiment_by_name(
+                self.experiment_name).experiment_id
+
+    @memoized_property
+    def mlflow_run(self):
+        return self.mlflow_client.create_run(self.mlflow_experiment_id)
+
+    def mlflow_log_param(self, key, value):
+        self.mlflow_client.log_param(self.mlflow_run.info.run_id, key, value)
+
+    def mlflow_log_metric(self, key, value):
+        self.mlflow_client.log_metric(self.mlflow_run.info.run_id, key, value)
+
+
 if __name__ == "__main__":
     df = get_data()
     df_clean = clean_data(df)
@@ -61,3 +93,12 @@ if __name__ == "__main__":
     trainer = Trainer(X,y)
     trained_pipe = trainer.run()
     trainer.evaluate()
+
+    experiment_id = trainer.mlflow_experiment_id
+
+    client = MlflowClient()
+
+    for model in ["linear", "Randomforest"]:
+        trainer.mlflow_log_metric("rmse", 4.5)
+        trainer.mlflow_log_param("model", model)
+        trainer.mlflow_log_param("student_name", "lillkml")
