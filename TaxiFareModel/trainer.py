@@ -9,6 +9,7 @@ from TaxiFareModel.utils import compute_rmse
 from memoized_property import memoized_property
 import mlflow
 from mlflow.tracking import MlflowClient
+import joblib
 
 
 class Trainer():
@@ -49,11 +50,15 @@ class Trainer():
         self.pipeline.fit(self.X_train, self.y_train)
 
 
-    def evaluate(self, ):
+    def evaluate(self):
         """evaluates the pipeline on df_test and return the RMSE"""
         self.y_pred = self.pipeline.predict(self.X_test)
 
         return compute_rmse(self.y_pred, self.y_test)
+
+    def save_model(self):
+        """ Save the trained model into a model.joblib file """
+        joblib.dump(self.pipeline, 'pipeline.joblib')
 
 
     MLFLOW_URI = "https://mlflow.lewagon.co/"
@@ -93,6 +98,7 @@ if __name__ == "__main__":
     trainer = Trainer(X,y)
     trained_pipe = trainer.run()
     rsme = trainer.evaluate()
+    trainer.save_model()
 
     trainer.mlflow_log_metric("rmse", rsme)
     trainer.mlflow_log_param("model", "linear")
